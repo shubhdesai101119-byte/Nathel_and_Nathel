@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Agri-Trade Intelligence Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .nav-btn.active {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border-bottom: 2px solid #15803d;
+        }
+    </style>
+    <!-- Chosen Palette: Agri-Tech Neutral (Slate, Emerald, Amber) -->
+    <!-- Application Structure Plan:
+         1. Dashboard Overview: High-level global stats to orient the user.
+         2. Country Analysis: Deep dive into specific entities to show 'What they grow vs consume'.
+         3. Opportunity Engine: The core "Answer" engine - inputs for commodity/origin, outputting "Best place to sell".
+         Rationale: This moves from general context to specific analysis, ending with actionable intelligence (the trade opportunity).
+    -->
+    <!-- Visualization & Content Choices:
+         1. Comparison Charts (Bar): Best for Production vs Consumption gap analysis.
+         2. Distribution Charts (Doughnut): Best for showing export commodity mix.
+         3. Dynamic Tables: Essential for ranking "Best Places to Sell" based on calculated scores.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-2xl font-bold text-emerald-700 tracking-tight">Agri<span class="text-slate-900">Trade</span>.io</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn active border-transparent text-slate-500 hover:text-emerald-700 hover:border-emerald-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full">
+                            Global Overview
+                        </button>
+                        <button onclick="switchView('country')" id="nav-country" class="nav-btn border-transparent text-slate-500 hover:text-emerald-700 hover:border-emerald-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full">
+                            Country Analysis
+                        </button>
+                        <button onclick="switchView('opportunity')" id="nav-opportunity" class="nav-btn border-transparent text-slate-500 hover:text-emerald-700 hover:border-emerald-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full">
+                            Trade Opportunity Finder
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xs text-slate-400 border border-slate-200 rounded px-2 py-1">v1.0 Prototype</span>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu placeholder for responsiveness -->
+        <div class="sm:hidden flex justify-around border-t border-slate-100 py-2">
+            <button onclick="switchView('dashboard')" class="text-xs font-medium text-slate-600">Overview</button>
+            <button onclick="switchView('country')" class="text-xs font-medium text-slate-600">Analysis</button>
+            <button onclick="switchView('opportunity')" class="text-xs font-bold text-emerald-700">Finder</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="space-y-8 animate-fade-in">
+            <!-- Intro -->
+            <div class="max-w-3xl">
+                <h1 class="text-3xl font-bold text-slate-900">Global Agricultural Market Intelligence</h1>
+                <p class="mt-2 text-lg text-slate-600">
+                    Welcome to the strategic overview. This dashboard aggregates data on production, consumption, and trade movements. 
+                    Use this section to understand macro-trends before drilling down into specific country profiles or finding export opportunities.
+                </p>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-6 border-l-4 border-emerald-500">
+                    <p class="text-sm font-medium text-slate-500">Top Global Commodity</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-900">Wheat</p>
+                    <p class="text-xs text-green-600 mt-1">↑ 2.4% Production Vol</p>
+                </div>
+                <div class="card p-6 border-l-4 border-blue-500">
+                    <p class="text-sm font-medium text-slate-500">Highest Demand Region</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-900">Asia-Pacific</p>
+                    <p class="text-xs text-slate-400 mt-1">Driven by Rice & Soy</p>
+                </div>
+                <div class="card p-6 border-l-4 border-amber-500">
+                    <p class="text-sm font-medium text-slate-500">Top Exporter (Vol)</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-900">United States</p>
+                    <p class="text-xs text-slate-400 mt-1">Corn & Soybeans dominance</p>
+                </div>
+                <div class="card p-6 border-l-4 border-purple-500">
+                    <p class="text-sm font-medium text-slate-500">Fastest Growing Market</p>
+                    <p class="mt-1 text-2xl font-bold text-slate-900">Coffee</p>
+                    <p class="text-xs text-purple-600 mt-1">↑ 5.1% Global Consumption</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Global Production Mix -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4">Global Production Share by Crop</h3>
+                    <p class="text-sm text-slate-500 mb-6">Distribution of major agricultural outputs measured in millions of metric tonnes.</p>
+                    <div class="chart-container">
+                        <canvas id="globalProdChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Importers -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4">Top 5 Global Importers (Deficit Leaders)</h3>
+                    <p class="text-sm text-slate-500 mb-6">Countries with the largest gap between domestic production and consumption.</p>
+                    <div class="chart-container">
+                        <canvas id="globalImportChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: COUNTRY ANALYSIS -->
+        <div id="view-country" class="hidden space-y-8 animate-fade-in">
+            <!-- Intro -->
+            <div class="max-w-3xl">
+                <h1 class="text-3xl font-bold text-slate-900">Country Deep Dive</h1>
+                <p class="mt-2 text-lg text-slate-600">
+                    Analyze the agricultural profile of specific nations. Select a country below to visualize their 
+                    <strong>Production vs. Consumption</strong> gap. This gap identifies whether a country is a net exporter 
+                    (surplus) or a potential market for sales (deficit).
+                </p>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white p-6 rounded-lg shadow border border-slate-200 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                <label for="countrySelect" class="font-medium text-slate-700">Select Nation:</label>
+                <select id="countrySelect" class="block w-full md:w-64 rounded-md border-slate-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm p-2 border bg-slate-50">
+                    <!-- Options populated by JS -->
+                </select>
+                <button onclick="updateCountryView()" class="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition font-medium w-full md:w-auto">
+                    Analyze Profile
+                </button>
+            </div>
+
+            <!-- Country Data Grid -->
+            <div id="country-content" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Gap Analysis Chart -->
+                <div class="card p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-slate-900">Production vs. Consumption Gap Analysis</h3>
+                    <p class="text-sm text-slate-500 mb-4">
+                        <span class="inline-block w-3 h-3 bg-emerald-500 rounded-full mr-1"></span> Production (Supply) vs 
+                        <span class="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span> Consumption (Demand).
+                        <br>Where Amber > Emerald, an import opportunity exists.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="gapChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Strategic Summary -->
+                <div class="card p-6 bg-slate-50 border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Trade Profile Summary</h3>
+                    <div id="country-summary-text" class="prose text-slate-600 text-sm">
+                        <!-- Dynamic Text -->
+                    </div>
+                </div>
+
+                <!-- Export Composition -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Export Portfolio</h3>
+                    <p class="text-sm text-slate-500 mb-4">Breakdown of this country's primary agricultural exports.</p>
+                    <div class="chart-container mx-auto">
+                        <canvas id="exportPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: OPPORTUNITY FINDER -->
+        <div id="view-opportunity" class="hidden space-y-8 animate-fade-in">
+             <!-- Intro -->
+             <div class="max-w-4xl">
+                <h1 class="text-3xl font-bold text-slate-900">Trade Opportunity Finder</h1>
+                <p class="mt-2 text-lg text-slate-600">
+                    This is the decision engine. Input what you have to sell, and the system calculates the 
+                    <strong>"Market Attractiveness Score"</strong>. This score is derived from the target country's consumption deficit 
+                    and historical import trends.
+                </p>
+            </div>
+
+            <!-- Calculator / Filter Interface -->
+            <div class="card p-8 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
+                <h2 class="text-xl font-bold text-emerald-900 mb-6">What do you want to sell?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-emerald-900 mb-2">I am exporting from:</label>
+                        <select id="oppSource" class="w-full rounded border-emerald-200 p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-emerald-900 mb-2">Product:</label>
+                        <select id="oppProduct" class="w-full rounded border-emerald-200 p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="calculateOpportunities()" class="w-full bg-emerald-600 text-white font-bold py-2 px-4 rounded shadow hover:bg-emerald-700 transition transform hover:-translate-y-0.5">
+                            Find Best Markets
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="opportunity-results" class="hidden">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Top Market Recommendations</h3>
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-slate-300">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-slate-900 sm:pl-6">Rank</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Target Country</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Market Need (Deficit)</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Growth Trend</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Opportunity Score</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span class="sr-only">Action</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="opportunity-table-body" class="divide-y divide-slate-200 bg-white">
+                            <!-- Rows inserted by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-4 text-xs text-slate-400 italic">
+                    * Opportunity Score is calculated based on (Consumption - Production) + Import Growth Factor.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-slate-400 text-sm">
+                &copy; 2024 AgriTrade Data Systems. Mock Data for Prototype Demonstration.
+            </p>
+        </div>
+    </footer>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // --- 1. MOCK DATABASE (What you need for your Python project) ---
+        // Structure: Country -> Crop -> Production, Consumption, ExportRatio
+        
+        const crops = ["Wheat", "Rice", "Corn", "Coffee", "Soybeans"];
+        
+        const countryData = {
+            "USA": {
+                name: "United States",
+                region: "North America",
+                data: {
+                    "Wheat": { prod: 45, cons: 30, growth: 1.2 }, // Million Tonnes
+                    "Rice": { prod: 6, cons: 4, growth: 2.1 },
+                    "Corn": { prod: 350, cons: 280, growth: 0.5 },
+                    "Coffee": { prod: 0, cons: 1.6, growth: 4.5 }, // Pure import
+                    "Soybeans": { prod: 110, cons: 60, growth: 1.8 }
+                },
+                exports: { "Corn": 40, "Soybeans": 35, "Wheat": 15, "Other": 10 }
+            },
+            "Brazil": {
+                name: "Brazil",
+                region: "South America",
+                data: {
+                    "Wheat": { prod: 6, cons: 12, growth: 1.5 },
+                    "Rice": { prod: 10, cons: 10, growth: 0.8 },
+                    "Corn": { prod: 100, cons: 70, growth: 3.2 },
+                    "Coffee": { prod: 3.5, cons: 1.2, growth: 1.1 },
+                    "Soybeans": { prod: 135, cons: 50, growth: 2.9 }
+                },
+                exports: { "Soybeans": 50, "Coffee": 20, "Corn": 15, "Sugar": 15 }
+            },
+            "China": {
+                name: "China",
+                region: "Asia",
+                data: {
+                    "Wheat": { prod: 134, cons: 140, growth: 2.0 },
+                    "Rice": { prod: 148, cons: 155, growth: 1.0 },
+                    "Corn": { prod: 260, cons: 290, growth: 4.1 }, // Huge deficit
+                    "Coffee": { prod: 0.1, cons: 0.3, growth: 12.0 }, // Fast growth
+                    "Soybeans": { prod: 19, cons: 115, growth: 3.5 }
+                },
+                exports: { "Rice": 10, "Tea": 40, "Vegetables": 30, "Other": 20 }
+            },
+            "India": {
+                name: "India",
+                region: "Asia",
+                data: {
+                    "Wheat": { prod: 107, cons: 100, growth: 1.8 },
+                    "Rice": { prod: 120, cons: 105, growth: 1.2 },
+                    "Corn": { prod: 30, cons: 28, growth: 3.5 },
+                    "Coffee": { prod: 0.3, cons: 0.1, growth: 5.0 },
+                    "Soybeans": { prod: 12, cons: 11, growth: 6.0 }
+                },
+                exports: { "Rice": 45, "Wheat": 10, "Spices": 25, "Cotton": 20 }
+            },
+            "Egypt": {
+                name: "Egypt",
+                region: "Africa",
+                data: {
+                    "Wheat": { prod: 9, cons: 20, growth: 2.2 }, // Massive Wheat buyer
+                    "Rice": { prod: 4, cons: 3.8, growth: 1.1 },
+                    "Corn": { prod: 6, cons: 14, growth: 2.5 },
+                    "Coffee": { prod: 0, cons: 0.1, growth: 3.0 },
+                    "Soybeans": { prod: 0.05, cons: 4, growth: 4.0 }
+                },
+                exports: { "Citrus": 50, "Vegetables": 30, "Cotton": 10, "Other": 10 }
+            }
+        };
+
+        // --- 2. CHART INSTANCES ---
+        let gapChartInstance = null;
+        let exportPieInstance = null;
+        let globalProdInstance = null;
+        let globalImportInstance = null;
+
+        // --- 3. CORE LOGIC ---
+
+        function init() {
+            populateSelects();
+            renderDashboardCharts();
+        }
+
+        function populateSelects() {
+            const countrySelect = document.getElementById('countrySelect');
+            const oppSource = document.getElementById('oppSource');
+            const oppProduct = document.getElementById('oppProduct');
+            
+            Object.keys(countryData).forEach(code => {
+                // Populate Country Analysis Select
+                let opt = document.createElement('option');
+                opt.value = code;
+                opt.innerHTML = countryData[code].name;
+                countrySelect.appendChild(opt);
+
+                // Populate Opp Source
+                let opt2 = document.createElement('option');
+                opt2.value = code;
+                opt2.innerHTML = countryData[code].name;
+                oppSource.appendChild(opt2);
+            });
+
+            crops.forEach(crop => {
+                let opt = document.createElement('option');
+                opt.value = crop;
+                opt.innerHTML = crop;
+                oppProduct.appendChild(opt);
+            });
+        }
+
+        // --- Navigation Logic ---
+        function switchView(viewName) {
+            // Hide all
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-country').classList.add('hidden');
+            document.getElementById('view-opportunity').classList.add('hidden');
+            
+            // Reset Nav Styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-emerald-700', 'border-emerald-300');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            // Show selected
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${viewName}`);
+            if(activeBtn) {
+                activeBtn.classList.add('active', 'text-emerald-700', 'border-emerald-300');
+                activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            }
+
+            if(viewName === 'country') updateCountryView(); // Refresh chart if switching
+        }
+
+        // --- View 1: Dashboard Render ---
+        function renderDashboardCharts() {
+            // Global Prod Chart
+            const ctx1 = document.getElementById('globalProdChart').getContext('2d');
+            
+            // Calculate aggregations
+            const cropTotals = crops.map(crop => {
+                return Object.values(countryData).reduce((acc, country) => acc + country.data[crop].prod, 0);
+            });
+
+            if (globalProdInstance) globalProdInstance.destroy();
+            globalProdInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: crops,
+                    datasets: [{
+                        label: 'Global Production (Million Tonnes)',
+                        data: cropTotals,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Import Needs Chart (Top Deficits)
+            const deficits = [];
+            Object.values(countryData).forEach(c => {
+                let maxDeficit = 0;
+                let cropName = '';
+                crops.forEach(crop => {
+                    const diff = c.data[crop].cons - c.data[crop].prod;
+                    if(diff > maxDeficit) { maxDeficit = diff; cropName = crop; }
+                });
+                if(maxDeficit > 0) deficits.push({country: c.name, crop: cropName, amount: maxDeficit});
+            });
+            // Sort top 5
+            deficits.sort((a,b) => b.amount - a.amount);
+            const topDeficits = deficits.slice(0,5);
+
+            const ctx2 = document.getElementById('globalImportChart').getContext('2d');
+            if(globalImportInstance) globalImportInstance.destroy();
+            globalImportInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: topDeficits.map(d => d.country),
+                    datasets: [{
+                        label: 'Estimated Shortfall (Million Tonnes)',
+                        data: topDeficits.map(d => d.amount),
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y'
+                }
+            });
+        }
+
+        // --- View 2: Country Analysis Logic ---
+        function updateCountryView() {
+            const countryCode = document.getElementById('countrySelect').value;
+            const data = countryData[countryCode];
+
+            // 1. Text Summary
+            const summaryDiv = document.getElementById('country-summary-text');
+            // Find biggest surplus and biggest deficit
+            let maxSurplus = {crop: 'None', val: -999};
+            let maxDeficit = {crop: 'None', val: -999};
+            
+            crops.forEach(crop => {
+                const diff = data.data[crop].prod - data.data[crop].cons;
+                if(diff > maxSurplus.val) maxSurplus = {crop, val: diff};
+                if(-diff > maxDeficit.val) maxDeficit = {crop, val: -diff};
+            });
+
+            summaryDiv.innerHTML = `
+                <p><strong>${data.name}</strong> is a major agricultural player in the <strong>${data.region}</strong> region.</p>
+                <p class="mt-2">✅ <strong>Strength:</strong> They are a net exporter of <strong>${maxSurplus.val > 0 ? maxSurplus.crop : 'N/A'}</strong>.</p>
+                <p class="mt-2">📉 <strong>Opportunity:</strong> They have a significant deficit in <strong>${maxDeficit.val > 0 ? maxDeficit.crop : 'N/A'}</strong>, requiring imports.</p>
+            `;
+
+            // 2. Gap Chart (Prod vs Cons)
+            const prodData = crops.map(c => data.data[c].prod);
+            const consData = crops.map(c => data.data[c].cons);
+
+            const ctxGap = document.getElementById('gapChart').getContext('2d');
+            if (gapChartInstance) gapChartInstance.destroy();
+
+            gapChartInstance = new Chart(ctxGap, {
+                type: 'bar',
+                data: {
+                    labels: crops,
+                    datasets: [
+                        {
+                            label: 'Production',
+                            data: prodData,
+                            backgroundColor: '#10b981' // Emerald
+                        },
+                        {
+                            label: 'Consumption',
+                            data: consData,
+                            backgroundColor: '#f59e0b' // Amber
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Million Tonnes' } }
+                    }
+                }
+            });
+
+            // 3. Export Pie Chart
+            const exportKeys = Object.keys(data.exports);
+            const exportVals = Object.values(data.exports);
+            const ctxPie = document.getElementById('exportPieChart').getContext('2d');
+            if (exportPieInstance) exportPieInstance.destroy();
+
+            exportPieInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: exportKeys,
+                    datasets: [{
+                        data: exportVals,
+                        backgroundColor: ['#059669', '#34d399', '#fcd34d', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- View 3: Opportunity Algorithm ---
+        function calculateOpportunities() {
+            const sourceCode = document.getElementById('oppSource').value;
+            const product = document.getElementById('oppProduct').value;
+
+            const results = [];
+
+            // Logic: Iterate through all OTHER countries
+            Object.keys(countryData).forEach(targetCode => {
+                if(targetCode === sourceCode) return; // Don't sell to self
+
+                const target = countryData[targetCode];
+                const cropStats = target.data[product];
+
+                // Metrics
+                const deficit = cropStats.cons - cropStats.prod; // How much they need
+                const growth = cropStats.growth; // Is demand growing?
+
+                // Only consider positive deficits (they need the food)
+                if(deficit > 0) {
+                    // Simple Score Algorithm: Deficit Weight (70%) + Growth Weight (30%)
+                    // Normalized loosely for demo
+                    const score = (deficit * 0.7) + (growth * 5); 
+                    
+                    results.push({
+                        name: target.name,
+                        deficit: deficit.toFixed(1),
+                        growth: growth,
+                        score: score.toFixed(1)
+                    });
+                }
+            });
+
+            // Sort by score
+            results.sort((a,b) => b.score - a.score);
+
+            // Render Results
+            const resultsContainer = document.getElementById('opportunity-results');
+            const tbody = document.getElementById('opportunity-table-body');
+            tbody.innerHTML = '';
+
+            if(results.length === 0) {
+                resultsContainer.classList.remove('hidden');
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No major deficits found for this product in global markets.</td></tr>`;
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+            results.forEach((r, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-slate-900 sm:pl-6">${index + 1}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500 font-bold">${r.name}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-amber-600 font-medium">${r.deficit} M Tonnes</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
+                        <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">+${r.growth}%</span>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-200 w-24">
+                            <div class="bg-emerald-600 h-2.5 rounded-full" style="width: ${Math.min(r.score, 100)}%"></div>
+                        </div>
+                        <span class="text-xs">${r.score}</span>
+                    </td>
+                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        <button class="text-emerald-600 hover:text-emerald-900">View Report</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize on Load
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
